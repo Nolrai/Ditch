@@ -46,7 +46,7 @@ fun MyApp(
     modifier: Modifier = Modifier,
     names: List<String> = List(1000){"$it"}
 ) {
-    var shouldShowOnboarding = rememberSaveable { mutableStateOf(true) }
+    val shouldShowOnboarding = rememberSaveable { mutableStateOf(true) }
 
     if (shouldShowOnboarding.value) {
         OnboardingScreen(modifier = modifier, onContinueClicked = {shouldShowOnboarding.value = false})
