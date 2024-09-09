@@ -54,21 +54,22 @@ fun MyApp(
             }
         }
     ) {
-    val rowWidth = size.width / boxSize.width
-    val colHeight = size.height / boxSize.height
-    val x = offset.x / boxSize.width
-    val y = offset.y / boxSize.height
+        val rowWidth = size.width / boxSize.width
+        val colHeight = size.height / boxSize.height
+        val idx : Int = (offset.x / boxSize.width).toInt()
+        val jdx : Int = (offset.y / boxSize.height).toInt()
 
-    for (i in (0..rowWidth.toInt()+1))
-        for (j in (0 .. colHeight.toInt() + 1)) {
-            drawRect(
-                color = terrain.getCellColor(i - x.toInt(), j - y.toInt()),
-                topLeft = Offset(
-                    x = i.toFloat() * boxSize.width - x,
-                    y = j.toFloat() * boxSize.height - x
-                ),
-                size = boxSize
-            )
+        for (i in (-1..rowWidth.toInt() + 1)) {
+            for (j in (-1..colHeight.toInt() + 1)) {
+                val boxOffset = Offset(
+                    x = i.toFloat() * boxSize.width + (offset.x.rem(boxSize.width)) ,
+                    y = j.toFloat() * boxSize.height + (offset.y.rem(boxSize.height))
+                )
+                drawRect(
+                    color = terrain.getCellColor(i - idx, j - jdx),
+                    topLeft = boxOffset, size = boxSize
+                )
+            }
         }
     }
 }
