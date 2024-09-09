@@ -39,7 +39,7 @@ fun MyApp(
     modifier: Modifier = Modifier,
     terrain_: Terrain = Terrain(1024)
 ) {
-    var terrain by remember {
+    val terrain by remember {
         mutableStateOf(terrain_)
     }
     var offset by remember {
