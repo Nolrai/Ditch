@@ -6,15 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -24,7 +20,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import com.example.basicscodelab.ui.theme.BasicsCodelabTheme
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.reflect.KProperty
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
