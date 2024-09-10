@@ -19,7 +19,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import com.example.basicscodelab.ui.theme.BasicsCodelabTheme
-import java.util.Optional
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -42,7 +41,7 @@ fun MyApp(
     modifier: Modifier = Modifier,
 ) {
     val terrain by remember {
-        val size : Int = 1024
+        val size = 1024
         val rowRaw : FloatArray = perlinNoiseFractal(size,
                 listOf(
                     Pair(1f, size*3f),
@@ -144,7 +143,7 @@ data class Terrain (val size : Int,
 }
 
 fun perlinNoiseFractal (size : Int, amplitudesAndPeriods : List<Pair<Float, Float>> ) : FloatArray {
-    val ret : FloatArray = FloatArray(size, init = {0f})
+    val ret = FloatArray(size, init = {0f})
     for (p in amplitudesAndPeriods) {
         val noise : FloatArray = perlinNoise (size, p.first, p.second)
         for (i in ret.indices) {
