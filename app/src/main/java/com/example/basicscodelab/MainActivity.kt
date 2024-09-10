@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,14 +46,29 @@ fun MyApp(
     var offset by remember {
         mutableStateOf(Offset(0f,0f))
     }
-    val boxSize = Size (200f, 200f)
+    val rawBoxSize = Size(200f, 200f)
+    var zoom by remember {
+        mutableStateOf(1.0f)
+    }
+    val boxSize = rawBoxSize * zoom
     Canvas (
-        modifier = modifier.fillMaxSize().pointerInput(Unit){
-            detectDragGestures { change, dragAmount ->
-                change.consume()
-                offset += dragAmount
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTransformGestures(panZoomLock = true) { centroid, pan, gestureZoom, gestureRotate ->
+                    val oldScale = zoom
+                    val newScale = zoom * gestureZoom
+
+                    // For natural zooming and rotating, the centroid of the gesture should
+                    // be the fixed point where zooming and rotating occurs.
+                    // We compute where the centroid was (in the pre-transformed coordinate
+                    // space), and then compute where it will be after this delta.
+                    // We then compute what the new offset should be to keep the centroid
+                    // visually stationary for rotating and zooming, and also apply the pan.
+                    offset -= pan
+                    zoom = newScale
+                }
             }
-        }
     ) {
         val rowWidth = size.width / boxSize.width
         val colHeight = size.height / boxSize.height
@@ -62,11 +78,11 @@ fun MyApp(
         for (i in (-1..rowWidth.toInt() + 1)) {
             for (j in (-1..colHeight.toInt() + 1)) {
                 val boxOffset = Offset(
-                    x = i.toFloat() * boxSize.width + (offset.x.rem(boxSize.width)) ,
-                    y = j.toFloat() * boxSize.height + (offset.y.rem(boxSize.height))
+                    x = i.toFloat() * boxSize.width - (offset.x.rem(boxSize.width)) ,
+                    y = j.toFloat() * boxSize.height - (offset.y.rem(boxSize.height))
                 )
                 drawRect(
-                    color = terrain.getCellColor(i - idx, j - jdx),
+                    color = terrain.getCellColor(i + idx, j + jdx),
                     topLeft = boxOffset, size = boxSize
                 )
             }
