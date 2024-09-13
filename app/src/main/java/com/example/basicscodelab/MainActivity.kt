@@ -18,6 +18,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.util.lerp
+import androidx.core.math.MathUtils
 import com.example.basicscodelab.ui.theme.BasicsCodelabTheme
 import kotlin.math.max
 import kotlin.math.min
@@ -188,10 +190,3 @@ private fun fade (t : Float ) : Float {
     return t*t*t*(t*(t*6.0f - 15.0f) + 10.0f)
 }
 
-// Returns the linear interpolation between start and stop,
-// lerp(start,stop, 0) = start
-// lerp(start,stop, 1) = stop
-// note that values above 1 or below 0 for fraction will give valid extrapolations
-private fun lerp (start : Float, stop : Float, fraction : Float) : Float {
-    return (1 - fraction) * start + fraction * stop
-}
