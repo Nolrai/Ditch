@@ -20,15 +20,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.util.lerp
 import com.example.basicscodelab.ui.theme.BasicsCodelabTheme
+import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.ln
+import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        ///testing
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
@@ -53,16 +57,16 @@ fun MyApp(
     var offset by remember {
         mutableStateOf(Offset(0f,0f))
     }
-    val defaultTileSize = Size(100f, 100f)
+    val baseTileSize = Size(100f, 100f)
     var zoom by remember {
         mutableFloatStateOf(1.0f)
     }
-    val tileSize = defaultTileSize * zoom
+    val tileSize = baseTileSize * zoom
     Canvas (
         modifier = modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                detectTransformGestures(panZoomLock = true) { centroid, pan, gestureZoom, gestureRotate ->
+                detectTransformGestures(panZoomLock = true) { _, pan, gestureZoom, _ ->
                     val newScale = zoom * gestureZoom
                     offset -= pan
                     zoom = newScale
@@ -75,14 +79,17 @@ fun MyApp(
         val jOffset : Int = (offset.y / tileSize.height).toInt()
         drawRect(color = Color.Black, size = size)
         for (i in (-1..rowWidth.toInt() + 1)) {
-            val idx = i + iOffset
+            val terrainRow = warpAround(i + iOffset, terrain.size)
             for (j in (-1..colHeight.toInt() + 1)) {
-                val jdx = j + jOffset
+                val terrainCol = warpAround(j + jOffset, terrain.size)
                 val boxOffset = Offset(
                     x = i.toFloat() * tileSize.width - (offset.x.rem(tileSize.width)) ,
                     y = j.toFloat() * tileSize.height - (offset.y.rem(tileSize.height))
                 )
-                val color = if (idx * jdx != 0) terrain.getCellColor(idx, jdx) else Color.Black
+                val color =
+                    if (terrainRow * terrainCol != 0)
+                        terrain.getCellColor(terrainRow, terrainCol)
+                    else Color.Blue
                 drawRect(color = color, topLeft = boxOffset, size = tileSize * 0.9f)
             }
         }
@@ -101,60 +108,37 @@ fun restrictToUnitInterval (x : Float) : Float {
 }
 
 // a fixed mod/rem function to handle negative numbers correctly.
-fun wrapAround (i : Int, size : Int) : Int {
+fun warpAround(i: Int, size: Int) : Int {
     return if (i >= 0) i % size else size + (i % size)
 }
 
 class Terrain (val size : Int,
     ) {
 
-    @OptIn(ExperimentalUnsignedTypes::class)
     private val altitudes: FloatArray
-
 
     init {
         val noise = perlinNoiseFractal2D(
             size = size,
-            // only the relative amplitudes mater because we are going to rescale the whole thing
-            //      when we convert it to ints between 0 and 255
-            amplitudesAndPeriods = listOf (
+            // only the relative amplitudes mater.
+            amplitudesAndPeriods = listOf(
                 Pair(1f, diagonal(size * 3f)),
-                Pair(0.5f, diagonal(size/2.1f)),
-                Pair(0.25f, diagonal(size/5.1f)),
-            ))
-        val maximum : Float = noise.maxOfOrNull { x -> x.max() } ?: 1f
-        val minimum : Float = noise.minOfOrNull { x -> x.min() } ?: 0f
-        val scale : Float = 1f / (maximum - minimum)
-        altitudes = FloatArray(size * size) { i ->
-            val ret = (noise[i / size][i % size] - minimum) * scale
-            if (ret in 0.0..1.0) ret else error("Terrain generation failed")
-        }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Terrain
-
-        if (size != other.size) return false
-        if (!altitudes.contentEquals(other.altitudes)) return false
-
-        return true
+                Pair(0.5f, diagonal(size / 3f)),
+                Pair(0.25f, diagonal(size / 5f)),
+                Pair(0.25f, Offset(10f, 20f))
+            )
+        )
+        altitudes = FloatArray(size * size) { i -> noise[i % size][5] }
     }
 
     fun getCell (x_ : Int, y_ : Int) : Float {
-        val x = wrapAround(x_, size)
-        val y = wrapAround(y_, size)
+        val x = warpAround(x_, size)
+        val y = warpAround(y_, size)
         return altitudes[x * size + y]
     }
 
     fun getCellColor (x : Int, y : Int) : Color {
         return altitudeToColor(getCell(x, y))
-    }
-
-    override fun hashCode(): Int {
-        return 31 * size + altitudes.contentHashCode()
     }
 }
 
@@ -167,7 +151,10 @@ fun perlinNoiseFractal (size : Int, amplitudesAndPeriods : List<Pair<Float, Floa
             ret[i] += noise[i]
         }
     }
-    return ret
+    val maximum : Float = ret.maxOrNull() ?: 1f
+    val minimum : Float = ret.minOrNull() ?: 0f
+    val scale : Float = 1f / (maximum - minimum)
+    return FloatArray(size, init = {i -> (ret[i] - minimum) * scale})
 }
 
 // Creates an array of floats, randomly varying in swells/dips of either amplitude height
@@ -208,6 +195,7 @@ private fun fade (t : Float ) : Float {
     return t*t*t*(t*(t*6.0f - 15.0f) + 10.0f)
 }
 
+// We don't actually use this, instead just using two one dimensional perlin fractals.
 fun perlinNoiseFractal2D (size : Int, amplitudesAndPeriods : List<Pair<Float, Offset>> ) : Array<FloatArray> {
     val ret = Array(size){FloatArray(size, init = {0f})}
     for (p in amplitudesAndPeriods) {
