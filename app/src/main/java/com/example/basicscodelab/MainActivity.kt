@@ -118,17 +118,8 @@ class Terrain (val size : Int,
     private val altitudes: FloatArray
 
     init {
-        val noise = perlinNoiseFractal2D(
-            size = size,
-            // only the relative amplitudes mater.
-            amplitudesAndPeriods = listOf(
-                Pair(1f, diagonal(size * 3f)),
-                Pair(0.5f, diagonal(size / 3f)),
-                Pair(0.25f, diagonal(size / 5f)),
-                Pair(0.25f, Offset(10f, 20f))
-            )
-        )
-        altitudes = FloatArray(size * size) { i -> noise[i % size][5] }
+        val noise = perlinNoise2D(size, 1f, diagonal(10f))
+        altitudes = FloatArray(size * size) { i -> noise[i/size][i%size] }
     }
 
     fun getCell (x_ : Int, y_ : Int) : Float {
